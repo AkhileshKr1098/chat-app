@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fdfefe;
+        }
+
+        .chatBox {
+            width: 600px;
+            height: 400px;
+            display: flex;
+            border-radius: 5px;
+            padding: 5px;
+            gap: 5px;
+            background-color: #273746;
+        }
+
+        .chatSidebar {
+            width: 200px;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .userAccount {
+            width: 100%;
+            height: auto;
+            margin: 10px 0;
+            padding: 20px;
+            border-radius: 5px;
+            background-color: #95a5a6;
+            cursor: pointer;
+        }
+
+        .userAccount.active {
+            background-color: red;
+            color: white;
+        }
+
+        .chatMain {
+            width: calc(100% - 200px);
+            height: 100%;
+            border-radius: 5px;
+        }
+
+        .chatList {
+            width: 100%;
+            height: calc(100% - 80px);
+            border-radius: 5px;
+            background-color: #fdfefe;
+            padding: 5px;
+            overflow-y: auto;
+        }
+
+        .me {
+            float: right;
+            width: 51%;
+            text-align: end;
+        }
+
+        .other {
+            width: 51%;
+            text-align: start;
+            float: left;
+        }
+
+        .actionArea {
+            width: 100%;
+            height: 80px;
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .actionArea input {
+            width: 80%;
+            height: 30px;
+            padding: 0 10px;
+            border-radius: 5px;
+            border: none;
+            outline: none;
+        }
+
+        .actionArea button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #28b463;
+            color: #fdfefe;
+        }
+
+        .userSelect {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="chatBox">
+        <div class="chatSidebar">
+            <select id="userSelect" class="userSelect">
+                <option value="ayush">Ayush</option>
+                <option value="akhilesh">Akhilesh</option>
+                <option value="amarjeet">Amarjeet</option>
+            </select>
+            <div class="userAccount" mobile_number="9153637171" data-chat="ayush">Ayush</div>
+            <div class="userAccount" mobile_number="9253637171" data-chat="akhilesh">Akhilesh</div>
+            <div class="userAccount" mobile_number="9353637171" data-chat="amarjeet">Amarjeet</div>
+        </div>
+        <div class="chatMain">
+            <div class="chatList" id="chatList">
+                <!-- Chat messages will appear here -->
+            </div>
+            <div class="actionArea">
+                <input id="messageInput" placeholder="Write something">
+                <button id="sendButton">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const userAccounts = document.querySelectorAll('.userAccount');
+        const chatList = document.getElementById('chatList');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const userSelect = document.getElementById('userSelect');
+
+        let currentRecipient = '';
+        let currentUser = userSelect.value;
+
+        userSelect.addEventListener('change', (event) => {
+            currentUser = event.target.value;
+            updateUserUI();
+        });
+
+        function updateUserUI() {
+            userAccounts.forEach(account => {
+                account.classList.remove('active');
+                if (account.getAttribute('data-chat') === currentUser) {
+                    account.classList.add('active');
+                }
+            });
+            fetch(`/messages/${currentUser}/${currentRecipient}`)
+                .then(response => response.json())
+                .then(messages => {
+                    chatList.innerHTML = '';
+                    messages.forEach(msg => {
+                        const messageClass = msg.sender === currentUser ? 'me' : 'other';
+                        chatList.innerHTML += `<div class="${messageClass}">${msg.message} <span>${msg.timestamp}</span></div>`;
+                    });
+                    chatList.scrollTop = chatList.scrollHeight; // Scroll to bottom
+                });
+        }
+
+        userAccounts.forEach(account => {
+            account.addEventListener('click', () => {
+                userAccounts.forEach(acc => acc.classList.remove('active'));
+                account.classList.add('active');
+                currentRecipient = account.getAttribute('data-chat');
+                fetch(`/messages/${currentUser}/${currentRecipient}`)
+                    .then(response => response.json())
+                    .then(messages => {
+                        chatList.innerHTML = '';
+                        messages.forEach(msg => {
+                            const messageClass = msg.sender === currentUser ? 'me' : 'other';
+                            chatList.innerHTML += `<div class="${messageClass}">${msg.message} <span>${msg.timestamp}</span></div>`;
+                        });
+                        chatList.scrollTop = chatList.scrollHeight; // Scroll to bottom
+                    });
+            });
+        });
+
+        sendButton.addEventListener('click', () => {
+            const message = messageInput.value.trim();
+            if (message && currentRecipient) {
+                const messageData = {
+                    sender: currentUser,
+                    recipient: currentRecipient,
+                    message: message
+                };
+                socket.emit('chat message', messageData);
+                messageInput.value = '';
+            }
+        });
+
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendButton.click();
+            }
+        });
+
+        socket.on('chat message', (msg) => {
+            if (msg.recipient === currentUser || msg.sender === currentUser) {
+                const messageClass = msg.sender === currentUser ? 'me' : 'other';
+                chatList.innerHTML += `<div class="${messageClass}">${msg.message} <span>${msg.timestamp}</span></div>`;
+                chatList.scrollTop = chatList.scrollHeight; // Scroll to bottom
+            }
+        });
+    </script>
+</body>
+
+</html>
