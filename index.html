@@ -18,11 +18,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-direction: column;
             background-color: #fdfefe;
         }
 
         .chatBox {
-            width: 600px;
+            width: 88vw;
             height: 400px;
             display: flex;
             border-radius: 5px;
@@ -32,7 +33,8 @@
         }
 
         .chatSidebar {
-            width: 200px;
+            width: 26vw;
+            min-width: 100px;
             height: 100%;
             overflow-y: auto;
         }
@@ -45,6 +47,9 @@
             border-radius: 5px;
             background-color: #95a5a6;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .userAccount.active {
@@ -52,8 +57,16 @@
             color: white;
         }
 
+        .greenDot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: green;
+            display: none;
+        }
+
         .chatMain {
-            width: calc(100% - 200px);
+            width: calc(100% - 26vw);
             height: 100%;
             border-radius: 5px;
         }
@@ -112,16 +125,23 @@
 </head>
 
 <body>
+    <select id="userSelect" class="userSelect">
+        <option value="ayush">Ayush</option>
+        <option value="akhilesh">Akhilesh</option>
+        <option value="amarjeet">Amarjeet</option>
+    </select>
     <div class="chatBox">
         <div class="chatSidebar">
-            <select id="userSelect" class="userSelect">
-                <option value="ayush">Ayush</option>
-                <option value="akhilesh">Akhilesh</option>
-                <option value="amarjeet">Amarjeet</option>
-            </select>
-            <div class="userAccount" mobile_number="9153637171" data-chat="ayush">Ayush</div>
-            <div class="userAccount" mobile_number="9253637171" data-chat="akhilesh">Akhilesh</div>
-            <div class="userAccount" mobile_number="9353637171" data-chat="amarjeet">Amarjeet</div>
+
+            <div class="userAccount" mobile_number="9153637171" data-chat="ayush">
+                Ayush <span class="greenDot"></span>
+            </div>
+            <div class="userAccount" mobile_number="9253637171" data-chat="akhilesh">
+                Akhilesh <span class="greenDot"></span>
+            </div>
+            <div class="userAccount" mobile_number="9353637171" data-chat="amarjeet">
+                Amarjeet <span class="greenDot"></span>
+            </div>
         </div>
         <div class="chatMain">
             <div class="chatList" id="chatList">
@@ -158,16 +178,18 @@
                     account.classList.add('active');
                 }
             });
-            fetch(`/messages/${currentUser}/${currentRecipient}`)
-                .then(response => response.json())
-                .then(messages => {
-                    chatList.innerHTML = '';
-                    messages.forEach(msg => {
-                        const messageClass = msg.sender === currentUser ? 'me' : 'other';
-                        chatList.innerHTML += `<div class="${messageClass}">${msg.message} <span>${msg.timestamp}</span></div>`;
+            if (currentRecipient) {
+                fetch(`/messages/${currentUser}/${currentRecipient}`)
+                    .then(response => response.json())
+                    .then(messages => {
+                        chatList.innerHTML = '';
+                        messages.forEach(msg => {
+                            const messageClass = msg.sender === currentUser ? 'me' : 'other';
+                            chatList.innerHTML += `<div class="${messageClass}">${msg.message} <span>${msg.timestamp}</span></div>`;
+                        });
+                        chatList.scrollTop = chatList.scrollHeight; // Scroll to bottom
                     });
-                    chatList.scrollTop = chatList.scrollHeight; // Scroll to bottom
-                });
+            }
         }
 
         userAccounts.forEach(account => {
@@ -185,6 +207,9 @@
                         });
                         chatList.scrollTop = chatList.scrollHeight; // Scroll to bottom
                     });
+
+                // Remove green dot for current recipient
+                account.querySelector('.greenDot').style.display = 'none';
             });
         });
 
@@ -212,6 +237,17 @@
                 const messageClass = msg.sender === currentUser ? 'me' : 'other';
                 chatList.innerHTML += `<div class="${messageClass}">${msg.message} <span>${msg.timestamp}</span></div>`;
                 chatList.scrollTop = chatList.scrollHeight; // Scroll to bottom
+            }
+
+            if (msg.recipient === currentUser) {
+                const userAccount = Array.from(userAccounts).find(account => account.getAttribute('data-chat') === msg.sender);
+                if (userAccount) {
+                    const greenDot = userAccount.querySelector('.greenDot');
+                    greenDot.style.display = 'block';
+
+                    // Move user account to the top
+                    userAccount.parentNode.prepend(userAccount);
+                }
             }
         });
     </script>
