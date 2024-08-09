@@ -1,70 +1,81 @@
 const express = require('express');
 const http = require('http');
+const cors = require('cors');
 const socketIo = require('socket.io');
 const mysql = require('mysql');
-const moment = require('moment');
+const moment = require('moment'); // Ensure moment is installed
 
-// Create Express app
+// Setup server
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = socketIo(server, {
+  cors: {
+    origin: "http://localhost:4200", // Your Angular app URL
+    methods: ["GET", "POST"]
+  }
+});
+
+app.use(cors()); // Allow CORS
+app.use(express.json());
 
 // MySQL connection
 const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root', // Your MySQL username
-    password: '', // Your MySQL password
-    database: 'chat_app'
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'chat_app'
 });
 
-db.connect(err => {
-    if (err) throw err;
-    console.log('Connected to MySQL database');
+db.connect((err) => {
+  if (err) throw err;
+  console.log('Connected to MySQL database');
 });
 
-// Serve static files from the current directory
-app.use(express.static(__dirname));
-
-// Route to fetch previous messages between two users
-app.get('/messages/:user1/:user2', (req, res) => {
-    const { user1, user2 } = req.params;
-
-    // Query to get messages between two users
-    const query = `
-        SELECT * FROM chat_tbl
-        WHERE (sender = ? AND recipient = ?)
-        OR (sender = ? AND recipient = ?)
-        ORDER BY timestamp ASC
-    `;
-    db.query(query, [user1, user2, user2, user1], (err, results) => {
-        if (err) throw err;
-        res.json(results);
-    });
-});
-
-// Handle socket connections
+// Handle WebSocket connection
 io.on('connection', (socket) => {
-    console.log('New user connected');
+  console.log('A user connected');
+  
+  // Listen for user joining
+  socket.on('join', (user) => {
+    console.log(`${user} joined the chat`);
+    socket.join(user);
+  });
 
-    socket.on('chat message', (msg) => {
-        const { sender, recipient, message } = msg;
-        const timestamp = moment().format('YYYY-MM-DD HH:mm:ss');
+  // Listen for chat messages
+  socket.on('chat message', (msg) => {
+    const { sender, recipient, message } = msg;
+    const timestamp = moment().format('HH:mm:ss'); // Use 24-hour format for the database
+    const date = moment().format('YYYY-MM-DD'); // YYYY-MM-DD format
 
-        // Save the message to the database
-        const query = 'INSERT INTO chat_tbl (sender, recipient, message, timestamp) VALUES (?, ?, ?, ?)';
-        db.query(query, [sender, recipient, message, timestamp], (err, result) => {
-            if (err) throw err;
-            io.emit('chat message', { sender, recipient, message, timestamp });
-        });
+    // Save message to database
+    const query = `INSERT INTO chat_tbl (sender, recipient, message, timestamp, date) VALUES (?, ?, ?, ?, ?)`;
+    db.query(query, [sender, recipient, message, timestamp, date], (err, results) => {
+      if (err) throw err;
+
+      // Broadcast message to recipient and sender
+      io.to(recipient).emit('chat message', { sender, recipient, message, timestamp, date });
+      io.to(sender).emit('chat message', { sender, recipient, message, timestamp, date });
     });
+  });
 
-    socket.on('disconnect', () => {
-        console.log('User disconnected');
-    });
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+  });
 });
 
-// Start the server
+// Fetch messages API
+app.get('/messages/:user1/:user2', (req, res) => {
+  const { user1, user2 } = req.params;
+
+  const query = `SELECT * FROM chat_tbl WHERE (sender = ? AND recipient = ?) OR (sender = ? AND recipient = ?) ORDER BY date, timestamp`;
+  db.query(query, [user1, user2, user2, user1], (err, results) => {
+    if (err) throw err;
+    res.json(results);
+  });
+});
+
+// Start server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
