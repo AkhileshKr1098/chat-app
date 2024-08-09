@@ -1,0 +1,91 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1:3306
+-- Generation Time: Aug 09, 2024 at 10:19 AM
+-- Server version: 8.2.0
+-- PHP Version: 8.2.13
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `chat_app`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `chat_tbl`
+--
+
+DROP TABLE IF EXISTS `chat_tbl`;
+CREATE TABLE IF NOT EXISTS `chat_tbl` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `sender` varchar(255) NOT NULL,
+  `recipient` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `timestamp` time NOT NULL,
+  `mobile_number` varchar(20) DEFAULT NULL,
+  `date` date NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `messages`
+--
+
+DROP TABLE IF EXISTS `messages`;
+CREATE TABLE IF NOT EXISTS `messages` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `sender` varchar(255) NOT NULL,
+  `recipient` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `timestamp` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `messages`
+--
+
+INSERT INTO `messages` (`id`, `sender`, `recipient`, `message`, `timestamp`) VALUES
+(1, 'ayush', 'akhilesh', 'aa', '2024-08-07 06:08:58'),
+(2, 'akhilesh', 'ayush', 'hii', '2024-08-07 06:10:08'),
+(3, 'ayush', 'akhilesh', 'hii akhilesh', '2024-08-07 06:10:30'),
+(4, 'akhilesh', 'ayush', 'hii', '2024-08-07 06:10:41'),
+(5, 'ayush', 'akhilesh', 'hh', '2024-08-07 06:10:49'),
+(6, 'ayush', 'akhilesh', 'hii', '2024-08-07 06:11:16'),
+(7, 'akhilesh', 'ayush', 'hello', '2024-08-07 06:11:28'),
+(8, 'akhilesh', 'ayush', 'hii', '2024-08-07 06:11:59'),
+(9, 'ayush', 'akhilesh', 'he', '2024-08-07 06:12:04'),
+(10, 'ayush', 'akhilesh', 'hii', '2024-08-07 06:15:54'),
+(11, 'akhilesh', 'ayush', 'hello', '2024-08-07 06:16:04'),
+(12, 'akhilesh', 'ayush', 'how are you', '2024-08-07 06:16:55'),
+(13, 'ayush', 'akhilesh', 'i am fine', '2024-08-07 06:17:21'),
+(14, 'ayush', 'akhilesh', 'hii', '2024-08-07 06:17:47'),
+(15, 'akhilesh', 'ayush', 'hello', '2024-08-07 06:17:54'),
+(16, 'ayush', 'akhilesh', 'kaise ho', '2024-08-07 06:18:06'),
+(17, 'akhilesh', 'ayush', 'main mast bhai tum batao kaise ho, kaisa chal raha hai kaam. kitna kamata hai abhi', '2024-08-07 06:18:45'),
+(18, 'ayush', 'akhilesh', 'main bhi mast hu , kitna kamata hai abhi,.kya yarr', '2024-08-07 06:19:38'),
+(19, 'akhilesh', 'ayush', 'bol n', '2024-08-07 06:19:45'),
+(20, 'ayush', 'akhilesh', 'abhi bhai monthly 12L', '2024-08-07 06:20:14'),
+(21, 'akhilesh', 'ayush', 'dfsdf', '2024-08-07 06:20:26'),
+(22, 'ayush', 'akhilesh', 'zxczc', '2024-08-07 06:20:32'),
+(23, 'akhilesh', 'ayush', 'sadasd', '2024-08-07 06:20:44'),
+(24, 'ayush', 'akhilesh', 'sdsdasd', '2024-08-07 06:20:47');
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
