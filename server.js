@@ -20,11 +20,12 @@ app.use(express.json());
 
 // MySQL connection pool
 const dbConfig = {
-  connectionLimit: 10, // Adjust based on your needs
-  host: 'srv675.hstgr.io',
+  connectionLimit: 10,
+  host: '217.21.94.52', // Replace with your MySQL server's IP or hostname
   user: 'u472554301_chatuser',
   password: 'Hajipur@hjp#123',
-  database: 'u472554301_chatdb'
+  database: 'u472554301_chatdb',
+  connectTimeout: 10000 // Increase timeout to 10 seconds
 };
 
 const db = mysql.createPool(dbConfig);
