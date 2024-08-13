@@ -70,6 +70,9 @@ io.on('connection', (socket) => {
   });
 });
 
+app.get('/',(req, res) =>{
+  res.json('port is runing');
+})
 // Fetch messages API
 app.get('/messages/:user1/:user2', (req, res) => {
   const { user1, user2 } = req.params;
