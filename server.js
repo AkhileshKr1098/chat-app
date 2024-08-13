@@ -18,17 +18,24 @@ const io = socketIo(server, {
 app.use(cors()); // Allow CORS
 app.use(express.json());
 
-// MySQL connection
-const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'chat_app'
-});
+// MySQL connection pool
+const dbConfig = {
+  connectionLimit: 10, // Adjust based on your needs
+  host: 'srv675.hstgr.io',
+  user: 'u472554301_chatuser',
+  password: 'Hajipur@hjp#123',
+  database: 'u472554301_chatdb'
+};
 
-db.connect((err) => {
-  if (err) throw err;
+const db = mysql.createPool(dbConfig);
+
+db.getConnection((err, connection) => {
+  if (err) {
+    console.error('Error connecting to MySQL:', err);
+    throw err;
+  }
   console.log('Connected to MySQL database');
+  connection.release();
 });
 
 // Handle WebSocket connection
